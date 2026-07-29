@@ -2,7 +2,7 @@
   "miniprogramRoot": "dist/",
   "projectname": "BiliStudy",
   "description": "B站视频AI总结助手 — 把视频变成可复习的学习笔记",
-  "appid": "touristappid",
+  "appid": "wxee960f72f150632c",
   "setting": {
     "urlCheck": true,
     "es6": true,
