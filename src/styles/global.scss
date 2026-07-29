@@ -1,0 +1,2 @@
+// Re-export variables with explicit names so pages can @import just this file
+@use 'variables.scss' as *;
