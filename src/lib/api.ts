@@ -41,23 +41,31 @@ export class ApiError extends Error { status: number; constructor(message: strin
 // ── HTTP helpers ──────────────────────────────────────────────────────
 
 async function request<T = any>(path: string, init: { method?: string; body?: unknown } = {}): Promise<T> {
-  const resp = await Taro.request({
-    url: BASE_URL + path,
-    method: (init.method || 'GET') as any,
-    data: init.body,
-    header: {
-      ...(init.body ? { 'Content-Type': 'application/json' } : {}),
-      cookie: Taro.getStorageSync('session-cookie') || '',
-    },
-  });
-  if (resp.statusCode >= 400) {
-    const data = resp.data as any;
-    throw new ApiError(data?.error || `HTTP ${resp.statusCode}`, resp.statusCode);
+  console.log(`[API] ${init.method || 'GET'} ${BASE_URL}${path}`);
+  try {
+    const resp = await Taro.request({
+      url: BASE_URL + path,
+      method: (init.method || 'GET') as any,
+      data: init.body,
+      timeout: 15000,
+      header: {
+        ...(init.body ? { 'Content-Type': 'application/json' } : {}),
+        cookie: Taro.getStorageSync('session-cookie') || '',
+      },
+    });
+    console.log(`[API] ${path} → ${resp.statusCode}`);
+    if (resp.statusCode >= 400) {
+      const data = resp.data as any;
+      throw new ApiError(data?.error || `HTTP ${resp.statusCode}`, resp.statusCode);
+    }
+    // Store cookie for session persistence
+    const setCookie = resp.header?.['Set-Cookie'] || resp.header?.['set-cookie'];
+    if (setCookie) Taro.setStorageSync('session-cookie', String(setCookie));
+    return resp.data as T;
+  } catch (err: any) {
+    console.error(`[API] ${path} failed:`, err.errMsg || err.message);
+    throw err;
   }
-  // Store cookie for session persistence
-  const setCookie = resp.header?.['Set-Cookie'] || resp.header?.['set-cookie'];
-  if (setCookie) Taro.setStorageSync('session-cookie', String(setCookie));
-  return resp.data as T;
 }
 
 // ── Auth ──────────────────────────────────────────────────────────────
